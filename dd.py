@@ -34,21 +34,27 @@ def main():
     # Filter by category
     filtered_df = df[df["Category"] == selected_category]
 
-    # Build data for the selected category
     data_rows = []
+    all_totals = []
     for _, row in filtered_df.iterrows():
         total_count, state_counts = parse_states_and_count(row["Event"])
+        all_totals.append(total_count)
         for abbrev, count in state_counts:
             data_rows.append({
                 "Date_Event": row["Date_Event"].date(),
                 "State": abbrev,
                 "Cumulative_Count": count
             })
-    map_df = pd.DataFrame(data_rows)
 
-    if map_df.empty:
+    if not data_rows:
         st.write("No data for this category.")
         return
+
+    # Display overall cumulative for this category
+    overall_cumulative = max(all_totals) if all_totals else 0
+    st.write(f"Overall cumulative number for {selected_category}: **{overall_cumulative}**")
+
+    map_df = pd.DataFrame(data_rows)
 
     # Base choropleth
     fig_choro = px.choropleth(
@@ -74,6 +80,10 @@ def main():
         hover_name="State"
     )
 
+    # Make map bigger
+    fig_choro.update_layout(width=1000, height=700)
+    fig_text.update_layout(width=1000, height=700)
+
     # Merge animation frames
     combined_fig = go.Figure(
         data=fig_choro.data,
@@ -84,6 +94,8 @@ def main():
         combined_fig.frames[i].data += scatter_frame.data
     for trace in fig_text.data:
         combined_fig.add_trace(trace)
+
+    # Keep the animation controls
     combined_fig.layout.updatemenus = fig_text.layout.updatemenus
 
     st.plotly_chart(combined_fig)
