@@ -10,13 +10,15 @@ def main():
     # Convert date column to datetime
     df["Date_Event"] = pd.to_datetime(df["Date_Event"], errors="coerce")
 
-    # Display a simple timeline grouped by category
-    st.subheader("Event Timeline by Category")
-    for cat in df["Category"].unique():
-        st.markdown(f"### {cat}")
-        subset = df[df["Category"] == cat].sort_values("Date_Event")
-        for _, row in subset.iterrows():
-            st.write(f"{row['Date_Event'].date()}: {row['Event']}")
+    # Sidebar selection for Category
+    category_list = sorted(df["Category"].unique())
+    selected_category = st.sidebar.selectbox("Select Category", category_list)
+
+    # Display timeline only for the selected category
+    st.subheader(f"Event Timeline for {selected_category}")
+    subset = df[df["Category"] == selected_category].sort_values("Date_Event")
+    for _, row in subset.iterrows():
+        st.write(f"{row['Date_Event'].date()}: {row['Event']}")
 
 if __name__ == "__main__":
     main()
